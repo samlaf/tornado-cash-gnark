@@ -14,4 +14,4 @@ clean: ## removes all generate files from gen
 	rm solidity/verifier_g16.sol solidity/verifier_g16_bindings.go
 
 test: ## runs go tests related to mimc circuit
-	cd solidity && go test
+	cd solidity && go test -v

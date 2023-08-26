@@ -67,14 +67,14 @@ func (t *ExportSolidityTestSuiteGroth16) SetupTest() {
 	// read proving and verifying keys
 	t.pk = groth16.NewProvingKey(ecc.BN254)
 	{
-		f, _ := os.Open("cubic.g16.pk")
+		f, _ := os.Open("mimc.g16.pk")
 		_, err = t.pk.ReadFrom(f)
 		f.Close()
 		t.NoError(err, "reading proving key failed")
 	}
 	t.vk = groth16.NewVerifyingKey(ecc.BN254)
 	{
-		f, _ := os.Open("cubic.g16.vk")
+		f, _ := os.Open("mimc.g16.vk")
 		_, err = t.vk.ReadFrom(f)
 		f.Close()
 		t.NoError(err, "reading verifying key failed")
@@ -86,8 +86,10 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 
 	// create a valid proof
 	var assignment circuit.Circuit
-	assignment.PreImage = 35
-	assignment.Hash = "2474112249751028531650252582366798049474486386634137916759752348728204118534"
+	preImage := uint64(35)
+	hash := "2474112249751028531650252582366798049474486386634137916759752348728204118534"
+	assignment.PreImage = preImage
+	assignment.Hash = hash
 
 	// witness creation
 	witness, err := frontend.NewWitness(&assignment, ecc.BN254.ScalarField())
@@ -105,7 +107,8 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 	// get proof bytes
 	const fpSize = 4 * 8
 	var buf bytes.Buffer
-	proof.WriteRawTo(&buf)
+	_, err = proof.WriteRawTo(&buf)
+	t.NoError(err, "writing proof to buffer failed")
 	proofBytes := buf.Bytes()
 
 	// solidity contract inputs
@@ -127,7 +130,9 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 	c[1] = new(big.Int).SetBytes(proofBytes[fpSize*7 : fpSize*8])
 
 	// public witness
-	input[0] = new(big.Int).SetUint64(35)
+	hashBigInt, ok := new(big.Int).SetString(hash, 10)
+	t.True(ok, "hash string to big.Int conversion failed")
+	input[0] = hashBigInt
 
 	// call the contract
 	res, err := t.verifierContract.VerifyProof(&bind.CallOpts{}, a, b, c, input)
@@ -136,11 +141,11 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 	}
 
 	// (wrong) public witness
-	input[0] = new(big.Int).SetUint64(42)
+	input[0] = new(big.Int).SetUint64(1023402)
 
 	// call the contract should fail
 	res, err = t.verifierContract.VerifyProof(&bind.CallOpts{}, a, b, c, input)
 	if t.NoError(err, "calling verifier on chain gave error") {
-		t.False(res, "calling verifier on chain succeed, and shouldn't have")
+		t.False(res, "calling verifier on chain succeeded, and shouldn't have")
 	}
 }

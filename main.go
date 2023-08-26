@@ -23,7 +23,6 @@ func main() {
 	// witness
 	preImage := uint64(35)
 	hash := calculateMimcOutput(preImage)
-	fmt.Println(hash)
 	assignment := &circuit.Circuit{
 		Hash:     hash,
 		PreImage: preImage,
@@ -31,7 +30,7 @@ func main() {
 
 	witness, _ := frontend.NewWitness(assignment, ecc.BN254.ScalarField())
 	publicWitness, _ := witness.Public()
-	fmt.Println(witness.Vector())
+	fmt.Println("witness:", witness.Vector())
 	pk, vk, err := groth16.Setup(r1cs)
 	if err != nil {
 		panic(err)
