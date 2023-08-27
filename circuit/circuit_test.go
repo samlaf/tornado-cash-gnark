@@ -1,6 +1,7 @@
 package circuit
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -14,16 +15,21 @@ func TestCircuit(t *testing.T) {
 	var mimcCircuit Circuit
 
 	{
-		assert.ProverFailed(&mimcCircuit, &Circuit{
-			PreImage: 42,
-			Hash:     42,
-		}, test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
+		assert.ProverFailed(
+			&mimcCircuit,
+			&Circuit{
+				Nullifier:     1,
+				Secret:        2,
+				NullifierHash: 3,
+				Commitment:    4,
+			},
+			test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
 	}
 
 	{
-		assert.ProverSucceeded(&mimcCircuit, &Circuit{
-			PreImage: 35,
-			Hash:     "2474112249751028531650252582366798049474486386634137916759752348728204118534",
-		}, test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
+		assert.ProverSucceeded(
+			&mimcCircuit,
+			NewCircuit(big.NewInt(1), big.NewInt(2)),
+			test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
 	}
 }

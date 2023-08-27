@@ -85,14 +85,12 @@ func (t *ExportSolidityTestSuiteGroth16) SetupTest() {
 func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 
 	// create a valid proof
-	var assignment circuit.Circuit
-	preImage := uint64(35)
-	hash := "2474112249751028531650252582366798049474486386634137916759752348728204118534"
-	assignment.PreImage = preImage
-	assignment.Hash = hash
+	nullifier := big.NewInt(1)
+	secret := big.NewInt(2)
+	assignment := circuit.NewCircuit(nullifier, secret)
 
 	// witness creation
-	witness, err := frontend.NewWitness(&assignment, ecc.BN254.ScalarField())
+	witness, err := frontend.NewWitness(assignment, ecc.BN254.ScalarField())
 	t.NoError(err, "witness creation failed")
 
 	// prove
@@ -116,7 +114,7 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 		a     [2]*big.Int
 		b     [2][2]*big.Int
 		c     [2]*big.Int
-		input [1]*big.Int
+		input [2]*big.Int
 	)
 
 	// proof.Ar, proof.Bs, proof.Krs
@@ -130,9 +128,7 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 	c[1] = new(big.Int).SetBytes(proofBytes[fpSize*7 : fpSize*8])
 
 	// public witness
-	hashBigInt, ok := new(big.Int).SetString(hash, 10)
-	t.True(ok, "hash string to big.Int conversion failed")
-	input[0] = hashBigInt
+	input[0], input[1] = assignment.GetPublicOutputs()
 
 	// call the contract
 	res, err := t.verifierContract.VerifyProof(&bind.CallOpts{}, a, b, c, input)

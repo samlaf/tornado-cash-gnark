@@ -13,5 +13,11 @@ clean: ## removes all generate files from gen
 	rm -rf solidity/*.{vk,pk}
 	rm solidity/verifier_g16.sol solidity/verifier_g16_bindings.go
 
-test: ## runs go tests related to mimc circuit
+test-circuit: ## run circuit unit tests
+	cd circuit && go test -v
+
+test-contract: ## run contract verification unit tests
 	cd solidity && go test -v
+
+test-all: ## run all tests
+	go test -v ./...

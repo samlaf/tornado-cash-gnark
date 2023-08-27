@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
-	
-	"github.com/samlaf/tornado-cash-gnark/circuit"
 
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr/mimc"
+	"github.com/samlaf/tornado-cash-gnark/circuit"
 )
 
 func main() {
@@ -21,12 +19,9 @@ func main() {
 		panic(err)
 	}
 	// witness
-	preImage := uint64(35)
-	hash := calculateMimcOutput(preImage)
-	assignment := &circuit.Circuit{
-		Hash:     hash,
-		PreImage: preImage,
-	}
+	nullifier := big.NewInt(1)
+	secret := big.NewInt(2)
+	assignment := circuit.NewCircuit(nullifier, secret)
 
 	witness, _ := frontend.NewWitness(assignment, ecc.BN254.ScalarField())
 	publicWitness, _ := witness.Public()
@@ -44,22 +39,4 @@ func main() {
 	if err != nil {
 		panic("invalid proof")
 	}
-}
-
-func calculateMimcOutput(inputNum uint64) string {
-	hash := mimc.NewMiMC()
-
-	// hash the input (written as big endian byte array)
-	input := fr.Element{}
-	input.SetUint64(inputNum)
-	inputBytes32 := input.Bytes()
-	hash.Write(inputBytes32[:])
-
-	// get the output (which is a 32 byte slice)
-	outputBytes := hash.Sum(nil)
-
-	// write as a field element to get a nice string representation to output
-	element := fr.Element{}
-	element.SetBytes(outputBytes)
-	return element.String()
 }
