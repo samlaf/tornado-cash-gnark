@@ -61,6 +61,8 @@ func (t *ExportSolidityTestSuiteGroth16) SetupTest() {
 	t.verifierContract = v
 	t.backend.Commit()
 
+	t.circuit = circuit.InitializedCircuit()
+
 	t.r1cs, err = frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &t.circuit)
 	t.NoError(err, "compiling R1CS failed")
 
@@ -87,7 +89,7 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 	// create a valid proof
 	nullifier := big.NewInt(1)
 	secret := big.NewInt(2)
-	assignment := circuit.NewCircuit(nullifier, secret)
+	assignment := circuit.NewAssignment(nullifier, secret)
 
 	// witness creation
 	witness, err := frontend.NewWitness(assignment, ecc.BN254.ScalarField())
@@ -114,7 +116,7 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 		a     [2]*big.Int
 		b     [2][2]*big.Int
 		c     [2]*big.Int
-		input [2]*big.Int
+		input [3]*big.Int
 	)
 
 	// proof.Ar, proof.Bs, proof.Krs
@@ -128,7 +130,7 @@ func (t *ExportSolidityTestSuiteGroth16) TestVerifyProof() {
 	c[1] = new(big.Int).SetBytes(proofBytes[fpSize*7 : fpSize*8])
 
 	// public witness
-	input[0], input[1] = assignment.GetPublicOutputs()
+	input[0], input[1], input[2] = assignment.GetPublicOutputs()
 
 	// call the contract
 	res, err := t.verifierContract.VerifyProof(&bind.CallOpts{}, a, b, c, input)

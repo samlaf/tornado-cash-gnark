@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/samlaf/tornado-cash-gnark/circuit"
+	tccircuit "github.com/samlaf/tornado-cash-gnark/circuit"
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/groth16"
@@ -20,7 +20,7 @@ func main() {
 }
 
 func generateGroth16() error {
-	var circuit circuit.Circuit
+	circuit := tccircuit.InitializedCircuit()
 
 	r1cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &circuit)
 	if err != nil {
